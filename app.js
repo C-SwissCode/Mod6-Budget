@@ -166,6 +166,17 @@ var UIController = (function () {
       });
 
       fieldsArr[0].focus();
+    },
+
+    displayBudget: function(obj) {
+      DOMObjects.budgetIncome.textContent = '+' + obj.totalInc;
+      DOMObjects.budgetExpense.textContent = '-' + obj.totalExp;
+      DOMObjects.budgetValue.textContent = '+' + obj.budget;
+      if (obj.percentage > 0) {
+        DOMObjects.expensePercentage.textContent = obj.percentage + '%';
+      } else {
+        DOMObjects.expensePercentage.textContent = '---';
+      }
     }
   };
 
@@ -176,7 +187,7 @@ var UIController = (function () {
 var controller = (function (budgetCtrl, UICtrl) {
 
   var setupEventListeners = function () {
-    var DOMobj = UICtrl.getDOMObjects();
+    var DOMobj = UICtrl.getDOMObjects();   
 
     DOMobj.addBtn.addEventListener('click', ctrlAddItem);
 
@@ -186,14 +197,14 @@ var controller = (function (budgetCtrl, UICtrl) {
       }
     });
   }
-
+  
   var updateBudget = function () {
     // 1. Calculate the budget
     budgetCtrl.calculateBudget();
     // 2. Return the budget
     var budget = budgetCtrl.getBudget();
     // 3. Display the budget in the UI
-    console.log(budget);
+    UICtrl.displayBudget(budget);
   }
 
   var ctrlAddItem = function () {
@@ -223,6 +234,12 @@ var controller = (function (budgetCtrl, UICtrl) {
     init: function () {
       console.log('Application has started');
       setupEventListeners();
+      UICtrl.displayBudget({
+        totalInc : 0,
+        totalExp : 0,
+        budget : 0,
+        percentage: 0
+      });
     }
   };
 
