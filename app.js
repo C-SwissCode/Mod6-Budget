@@ -19,10 +19,20 @@ var budgetController = (function () {
       exp: []
     },
     totals: {
-      inc: [],
-      exp: []
-    }
+      inc: 0,
+      exp: 0
+    },
+    budget: 0,
+    percentage: -1
   };
+
+  var calculateTotal = function (type) {
+    var sum = 0;
+    data.allItems[type].forEach(function (cur) {
+      sum += cur.value;
+    });
+    data.totals[type] = sum;
+  }
 
   return {
     addItem: function (type, des, val) {
@@ -48,6 +58,35 @@ var budgetController = (function () {
       data.allItems[type].push(newItem);
 
       return newItem;
+    },
+
+    calculateBudget: function () {
+      // calculate total income and expenses
+      calculateTotal('inc');
+      calculateTotal('exp');
+
+      // calculate the budget: income - expenses
+      data.budget = data.totals.inc - data.totals.exp;
+
+      // calculate the percentage of income that we spent
+      if (data.totals.inc > 0) {
+        data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+      } else {
+        data.percentage = -1;
+      };
+    },
+
+    getBudget: function () {
+      return {
+        totalInc: data.totals.inc,
+        totalExp: data.totals.exp,
+        budget: data.budget,
+        percentage: data.percentage
+      };
+    },
+
+    testing: function () {
+      console.log(data);
     }
   }
 
@@ -87,7 +126,7 @@ var UIController = (function () {
       return {
         type: DOMObjects.addType.value, // Will be either inc or exp
         description: DOMObjects.descriptionBox.value,
-        value: DOMObjects.valueBox.value
+        value: parseFloat(DOMObjects.valueBox.value)
       };
     },
 
@@ -148,22 +187,36 @@ var controller = (function (budgetCtrl, UICtrl) {
     });
   }
 
+  var updateBudget = function () {
+    // 1. Calculate the budget
+    budgetCtrl.calculateBudget();
+    // 2. Return the budget
+    var budget = budgetCtrl.getBudget();
+    // 3. Display the budget in the UI
+    console.log(budget);
+  }
 
   var ctrlAddItem = function () {
     // 1. Get the field input data
     var input = UICtrl.getInput();
 
-    // 2. Add the itme to the budget controller
-    var newItem;
-    newItem = budgetController.addItem(input.type, input.description, input.value);
+    if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
 
-    // 3. Add the item to the UI
-    UICtrl.addListItem(newItem, input.type);
-    UICtrl.clearFields();
+      // 2. Add the itme to the budget controller
+      var newItem;
+      newItem = budgetCtrl.addItem(input.type, input.description, input.value);
 
-    // 4. Calculate the budget
+      // 3. Add the item to the UI
+      UICtrl.addListItem(newItem, input.type);
 
-    // 5. Display the budget in the UI
+      // 4. Clear fields
+      UICtrl.clearFields();
+
+      // 5. Calculate and update budget
+      updateBudget();
+    } else {
+      alert('WARNING! You must enter a real number that\'s not 0, and you must enter a description. If you fail you will be terminated');
+    }
   }
 
   return {
