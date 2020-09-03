@@ -90,6 +90,18 @@ var budgetController = (function () {
       };
     },
 
+    calculateItemPercentages: function () {
+      if (data.totals.inc > 0) {
+        data.allItems.exp.forEach(function (current) {
+          current.percentage = Math.round((current.value / data.totals.inc) * 100);
+        })
+      } else {
+        data.allItems.exp.forEach(function (current) {
+          current.percentage = -1;
+        })
+      }
+    },
+
     getBudget: function () {
       return {
         totalInc: data.totals.inc,
@@ -97,6 +109,14 @@ var budgetController = (function () {
         budget: data.budget,
         percentage: data.percentage
       };
+    },
+
+    getItemPercentages: function () {
+      var percentages;
+      percentages = data.allItems.exp.map(function (current) {
+        return current.percentage;
+      });
+      return percentages;
     },
 
     testing: function () {
@@ -199,6 +219,17 @@ var UIController = (function () {
       } else {
         DOMObjects.expensePercentage.textContent = '---';
       }
+    },
+
+    displayItemPercentages: function (objPercentages) {
+      for (var i = 0; i < objPercentages.length; i++) {
+        var childrenPercentEl = document.getElementById('exp-' + i).children[1].children[1];
+        if (objPercentages[i] !== -1) {
+          childrenPercentEl.textContent = objPercentages[i] + '%';
+        } else {
+          childrenPercentEl.textContent = '---';
+        }
+      };
     }
   };
 
@@ -238,16 +269,32 @@ var controller = (function (budgetCtrl, UICtrl) {
 
     // 3. Update budget
     updateBudget();
+
+    // 4. Update expense item percentages
+    updateItemPercentages();
   };
 
   var updateBudget = function () {
     // 1. Calculate the budget
     budgetCtrl.calculateBudget();
+
     // 2. Return the budget
     var budget = budgetCtrl.getBudget();
+
     // 3. Display the budget in the UI
     UICtrl.displayBudget(budget);
-  }
+  };
+
+  var updateItemPercentages = function () {
+    // 1. Calculate percentages
+    budgetCtrl.calculateItemPercentages();
+
+    // 2. Return percentages
+    var percentages = budgetCtrl.getItemPercentages();
+
+    // 3. Display the item percentages
+    UICtrl.displayItemPercentages(percentages);
+  };
 
   var ctrlAddItem = function () {
     // 1. Get the field input data
@@ -267,6 +314,9 @@ var controller = (function (budgetCtrl, UICtrl) {
 
       // 5. Calculate and update budget
       updateBudget();
+
+      // 6. Update individual exp percentages
+      updateItemPercentages();
     } else {
       alert('WARNING! You must enter a real number that\'s not 0, and you must enter a description. If you fail you will be terminated');
     }
