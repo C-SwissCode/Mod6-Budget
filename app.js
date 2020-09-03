@@ -11,7 +11,8 @@ var budgetController = (function () {
     this.id = id;
     this.description = description;
     this.value = value;
-  }
+    this.percentage = -1;
+  };
 
   var data = {
     allItems: {
@@ -60,15 +61,15 @@ var budgetController = (function () {
       return newItem;
     },
 
-    deleteItem: function(type, id) {
-      var ids, index;  
-      
-      var ids = data.allItems[type].map(function(current) {
+    deleteItem: function (type, id) {
+      var ids, index;
+
+      var ids = data.allItems[type].map(function (current) {
         return current.id;
       });
       index = ids.indexOf(id);
-      
-      if (index !== - 1) {
+
+      if (index !== -1) {
         data.allItems[type].splice(index, 1);
       }
     },
@@ -169,7 +170,7 @@ var UIController = (function () {
       element.insertAdjacentHTML('beforeend', newHtml);
     },
 
-    deleteListItem: function(selectorID) {
+    deleteListItem: function (selectorID) {
       var el;
       el = document.getElementById(selectorID);
 
@@ -189,7 +190,7 @@ var UIController = (function () {
       fieldsArr[0].focus();
     },
 
-    displayBudget: function(obj) {
+    displayBudget: function (obj) {
       DOMObjects.budgetIncome.textContent = '+' + obj.totalInc;
       DOMObjects.budgetExpense.textContent = '-' + obj.totalExp;
       DOMObjects.budgetValue.textContent = '+' + obj.budget;
@@ -208,7 +209,7 @@ var UIController = (function () {
 var controller = (function (budgetCtrl, UICtrl) {
 
   var setupEventListeners = function () {
-    var DOMobj = UICtrl.getDOMObjects();   
+    var DOMobj = UICtrl.getDOMObjects();
 
     DOMobj.addBtn.addEventListener('click', ctrlAddItem);
 
@@ -221,7 +222,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     DOMobj.container.addEventListener('click', ctrlDeleteItem);
   }
 
-  var ctrlDeleteItem = function(e) {
+  var ctrlDeleteItem = function (e) {
     var itemID, splitID, type, ID;
 
     itemID = e.target.parentNode.parentNode.parentNode.parentNode.id;
@@ -238,7 +239,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     // 3. Update budget
     updateBudget();
   };
-  
+
   var updateBudget = function () {
     // 1. Calculate the budget
     budgetCtrl.calculateBudget();
@@ -276,9 +277,9 @@ var controller = (function (budgetCtrl, UICtrl) {
       console.log('Application has started');
       setupEventListeners();
       UICtrl.displayBudget({
-        totalInc : 0,
-        totalExp : 0,
-        budget : 0,
+        totalInc: 0,
+        totalExp: 0,
+        budget: 0,
         percentage: 0
       });
     }
