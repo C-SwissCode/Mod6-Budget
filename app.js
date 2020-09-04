@@ -118,12 +118,6 @@ var budgetController = (function () {
     },
 
     getItemPercentages: function () {
-      // var percentages;
-      // percentages = data.allItems.exp.map(function (current) {
-      //   return current.percentage;
-      // });
-      // return percentages;
-
       return data.allItems.exp.map(function(current) {
         return current.getPercentage();
       });
