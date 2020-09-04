@@ -232,17 +232,34 @@ var UIController = (function () {
     },
 
     displayItemPercentages: function (objPercentages) {
-      for (var i = 0; i < objPercentages.length; i++) {
-        var childrenPercentEl = document.getElementById('exp-' + i).children[1].children[1];
-        if (objPercentages[i] !== -1) {
-          childrenPercentEl.textContent = objPercentages[i] + '%';
-        } else {
-          childrenPercentEl.textContent = '---';
-        }
+      //****** One way of doing it */
+      // for (var i = 0; i < objPercentages.length; i++) {
+      //   var childrenPercentEl = document.getElementById('exp-' + i).children[1].children[1];
+      //   if (objPercentages[i] !== -1) {
+      //     childrenPercentEl.textContent = objPercentages[i] + '%';
+      //   } else {
+      //     childrenPercentEl.textContent = '---';
+      //   }
+      // };
+
+      // The BEST way of doing it
+      var fields = document.querySelectorAll('.item__percentage');
+
+      var nodeListForEach = function(list, callback) {
+        for (var i = 0; i < list.length; i++) {
+          callback(list[i], i);
+        };
       };
+
+      nodeListForEach(fields, function(current, index) {
+        if (objPercentages[index] !== -1 && objPercentages[index] > 0) {
+          current.textContent = objPercentages[index] + '%';
+        } else {
+          current.textContent = '---';
+        };
+      });
     }
   };
-
 })();
 
 
