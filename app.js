@@ -14,6 +14,18 @@ var budgetController = (function () {
     this.percentage = -1;
   };
 
+  Expense.prototype.calcPercentages = function(totalIncome) {
+    if (totalIncome > 0) {
+      this.percentage = Math.round((this.value / totalIncome) * 100);
+    } else {
+      this.percentage = -1;
+    };
+  };
+
+  Expense.prototype.getPercentage = function() {
+    return this.percentage;
+  }
+
   var data = {
     allItems: {
       inc: [],
@@ -91,15 +103,9 @@ var budgetController = (function () {
     },
 
     calculateItemPercentages: function () {
-      if (data.totals.inc > 0) {
-        data.allItems.exp.forEach(function (current) {
-          current.percentage = Math.round((current.value / data.totals.inc) * 100);
-        })
-      } else {
-        data.allItems.exp.forEach(function (current) {
-          current.percentage = -1;
-        })
-      }
+      data.allItems.exp.forEach(function(current) {
+        current.calcPercentages(data.totals.inc);
+      });
     },
 
     getBudget: function () {
@@ -112,11 +118,15 @@ var budgetController = (function () {
     },
 
     getItemPercentages: function () {
-      var percentages;
-      percentages = data.allItems.exp.map(function (current) {
-        return current.percentage;
+      // var percentages;
+      // percentages = data.allItems.exp.map(function (current) {
+      //   return current.percentage;
+      // });
+      // return percentages;
+
+      return data.allItems.exp.map(function(current) {
+        return current.getPercentage();
       });
-      return percentages;
     },
 
     testing: function () {
