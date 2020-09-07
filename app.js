@@ -123,6 +123,13 @@ var budgetController = (function () {
       });
     },
 
+    getItems: function() {
+      return {
+        inc: data.allItems.inc,
+        exp: data.allItems.exp
+      };
+    },
+
     testing: function () {
       console.log(data);
     }
@@ -149,7 +156,8 @@ var UIController = (function () {
     incomeContainer: document.querySelector('.income__list'),
     expenseContainer: document.querySelector('.expenses__list'),
     container: document.querySelector('.container'),
-    dateElement: document.querySelector('.budget__title--month')
+    dateElement: document.querySelector('.budget__title--month'),
+    addContainer: document.querySelector('.add__container')
   };
 
   DOMStrings = {
@@ -315,9 +323,19 @@ var controller = (function (budgetCtrl, UICtrl) {
     });
 
     DOMobj.container.addEventListener('click', ctrlDeleteItem);
-
     DOMobj.addType.addEventListener('change', UICtrl.changedType);
+    DOMobj.addContainer.addEventListener('click', ctrlClearItems);
   }
+
+  var ctrlClearItems = function(e) {
+    //identify button clicked
+    var clickedBtn = e.target.classList.value;
+    console.log(clickedBtn);
+    var items = budgetCtrl.getItems();
+    //clear from data structure
+
+    //clear from UI
+  };
 
   var ctrlDeleteItem = function (e) {
     var itemID, splitID, type, ID;
