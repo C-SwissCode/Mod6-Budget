@@ -29,7 +29,9 @@ var budgetController = (function () {
   var data = {
     allItems: {
       inc: [],
-      exp: []
+      exp: [],
+      prevIncs: [],
+      prevExps: []
     },
     totals: {
       inc: 0,
@@ -45,7 +47,7 @@ var budgetController = (function () {
       sum += cur.value;
     });
     data.totals[type] = sum;
-  }
+  };
 
   return {
     addItem: function (type, des, val) {
@@ -123,22 +125,29 @@ var budgetController = (function () {
       });
     },
 
-    getItems: function() {
-      return {
-        inc: data.allItems.inc,
-        exp: data.allItems.exp
-      };
+    getItems: function () {
+      return data.allItems;
     },
 
-    clearAll: function(type) {
+    clearAll: function (type) {
       if (type === 'exp') {
         data.allItems[type] = [];
-      } else if (type ==='inc') {
+      } else if (type === 'inc') {
         data.allItems[type] = [];
-      } else if (type ==='all') {
+      } else if (type === 'all') {
         data.allItems.inc = [];
         data.allItems.exp = [];
       };
+    },
+
+    recordPreviousItms: function () {
+      data.allItems.prevIncs = data.allItems.inc;
+      data.allItems.prevExps = data.allItems.exp;
+    },
+
+    restoreItms: function () {
+      data.allItems.inc = data.allItems.prevIncs;
+      data.allItems.exp = data.allItems.prevExps;
     },
 
     testing: function () {
@@ -168,7 +177,8 @@ var UIController = (function () {
     expenseContainer: document.querySelector('.expenses__list'),
     container: document.querySelector('.container'),
     dateElement: document.querySelector('.budget__title--month'),
-    addContainer: document.querySelector('.add__container')
+    addContainer: document.querySelector('.add__container'),
+    undo: document.querySelector('.undo')
   };
 
   DOMStrings = {
@@ -179,6 +189,34 @@ var UIController = (function () {
     incomeContainer: '.income__list',
     expensesContainer: '.expenses__list',
   };
+
+  var addIncItem = function (incObj) {
+    var html, newHtml, element;
+
+    element = DOMObjects.incomeContainer;
+
+    html = '<div class="item incitm clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+
+    newHtml = html.replace('%id%', incObj.id);
+    newHtml = newHtml.replace('%description%', incObj.description);
+    newHtml = newHtml.replace('%value%', formatNumbers(incObj.value, 'inc'));
+    //Add new item to the UI/DOM
+    element.insertAdjacentHTML('beforeend', newHtml);
+  };
+
+  var addExpItem = function (expObj) {
+    var html, newHtml, element;
+
+    element = DOMObjects.expenseContainer;
+
+    html = '<div class="item expitm clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+
+    newHtml = html.replace('%id%', expObj.id);
+    newHtml = newHtml.replace('%description%', expObj.description);
+    newHtml = newHtml.replace('%value%', formatNumbers(expObj.value, 'exp'));
+    //Add new item to the UI/DOM
+    element.insertAdjacentHTML('beforeend', newHtml);
+  }
 
   var formatNumbers = function (num, type) {
     var numSplit, int, dec;
@@ -219,24 +257,18 @@ var UIController = (function () {
     },
 
     addListItem: function (obj, type) {
-      var html, newHtml, element;
+      var itemObject = obj;
 
       if (type === 'inc') {
-        element = DOMObjects.incomeContainer;
-
-        html = '<div class="item incitm clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+        addIncItem(itemObject);
 
       } else if (type === 'exp') {
-        element = DOMObjects.expenseContainer;
+        addExpItem(itemObject);
+      };
+    },
 
-        html = '<div class="item expitm clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
-      }
-      //Replcae placeholder data with real object data
-      newHtml = html.replace('%id%', obj.id);
-      newHtml = newHtml.replace('%description%', obj.description);
-      newHtml = newHtml.replace('%value%', formatNumbers(obj.value, type));
-      //Add new item to the UI/DOM
-      element.insertAdjacentHTML('beforeend', newHtml);
+    restore: function (obj) {
+
     },
 
     deleteListItem: function (selectorID) {
@@ -316,19 +348,19 @@ var UIController = (function () {
       document.querySelector(DOMStrings.inputBtn).classList.toggle('red');
     },
 
-    clearDisplay: function(type) {
+    clearDisplay: function (type) {
       var incElms, expElms, removeIncs, removeExps;
       incElms = document.querySelectorAll('.incitm');
       expElms = document.querySelectorAll('.expitm');
 
       removeIncs = function () {
-        nodeListForEach(incElms, function(cur, index) {
+        nodeListForEach(incElms, function (cur, index) {
           cur.parentNode.removeChild(document.getElementById('inc-' + index));
         });
       };
 
       removeExps = function () {
-        nodeListForEach(expElms, function(cur, index) {
+        nodeListForEach(expElms, function (cur, index) {
           cur.parentNode.removeChild(document.getElementById('exp-' + index))
         });
       }
@@ -362,15 +394,28 @@ var controller = (function (budgetCtrl, UICtrl) {
     DOMobj.container.addEventListener('click', ctrlDeleteItem);
     DOMobj.addType.addEventListener('change', UICtrl.changedType);
     DOMobj.addContainer.addEventListener('click', ctrlClearItems);
+    DOMobj.undo.addEventListener('click', ctrlUndo);
   }
 
-  var ctrlClearItems = function(e) {
+  var ctrlUndo = function () {
+    //push previous original items back into the data structure and update budget and percentages
+    budgetCtrl.restoreItms();
+    budgetCtrl.calculateBudget();
+    budgetCtrl.updateItemPercentages();
+
+    //update the UI back to the original by displaying the reseted data structure into the 
+
+
+  }
+
+
+  var ctrlClearItems = function (e) {
     var clickedBtn, btnType;
-    
+
     //identify button clicked
     var clickedBtn = e.target.classList.value;
 
-    switch(clickedBtn) {
+    switch (clickedBtn) {
       case 'clear_exp': {
         btnType = 'exp';
         break;
@@ -388,8 +433,9 @@ var controller = (function (budgetCtrl, UICtrl) {
       }
     };
 
-    //clear from data structure
-    var items = budgetCtrl.getItems();
+    //clear from data structure and record previous items in data structure
+    budgetCtrl.recordPreviousItms();
+
     budgetCtrl.clearAll(btnType);
 
     //clear from UI and display new budget
