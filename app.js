@@ -130,6 +130,17 @@ var budgetController = (function () {
       };
     },
 
+    clearAll: function(type) {
+      if (type === 'exp') {
+        data.allItems[type] = [];
+      } else if (type ==='inc') {
+        data.allItems[type] = [];
+      } else if (type ==='all') {
+        data.allItems.inc = [];
+        data.allItems.exp = [];
+      };
+    },
+
     testing: function () {
       console.log(data);
     }
@@ -213,12 +224,12 @@ var UIController = (function () {
       if (type === 'inc') {
         element = DOMObjects.incomeContainer;
 
-        html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+        html = '<div class="item incitm clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
 
       } else if (type === 'exp') {
         element = DOMObjects.expenseContainer;
 
-        html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+        html = '<div class="item expitm clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value"> %value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
       }
       //Replcae placeholder data with real object data
       newHtml = html.replace('%id%', obj.id);
@@ -303,8 +314,34 @@ var UIController = (function () {
         cur.classList.toggle('red-focus');
       });
       document.querySelector(DOMStrings.inputBtn).classList.toggle('red');
-    }
+    },
 
+    clearDisplay: function(type) {
+      var incElms, expElms, removeIncs, removeExps;
+      incElms = document.querySelectorAll('.incitm');
+      expElms = document.querySelectorAll('.expitm');
+
+      removeIncs = function () {
+        nodeListForEach(incElms, function(cur, index) {
+          cur.parentNode.removeChild(document.getElementById('inc-' + index));
+        });
+      };
+
+      removeExps = function () {
+        nodeListForEach(expElms, function(cur, index) {
+          cur.parentNode.removeChild(document.getElementById('exp-' + index))
+        });
+      }
+
+      if (type === 'inc') {
+        removeIncs();
+      } else if (type === 'exp') {
+        removeExps();
+      } else if (type === 'all') {
+        removeIncs();
+        removeExps();
+      };
+    }
   };
 })();
 
@@ -328,13 +365,39 @@ var controller = (function (budgetCtrl, UICtrl) {
   }
 
   var ctrlClearItems = function(e) {
+    var clickedBtn, btnType;
+    
     //identify button clicked
     var clickedBtn = e.target.classList.value;
-    console.log(clickedBtn);
-    var items = budgetCtrl.getItems();
-    //clear from data structure
 
-    //clear from UI
+    switch(clickedBtn) {
+      case 'clear_exp': {
+        btnType = 'exp';
+        break;
+      }
+      case 'clear_inc': {
+        btnType = 'inc';
+        break;
+      }
+      case 'clear_all': {
+        btnType = 'all';
+        break;
+      }
+      default: {
+        btnType = -1;
+      }
+    };
+
+    //clear from data structure
+    var items = budgetCtrl.getItems();
+    budgetCtrl.clearAll(btnType);
+
+    //clear from UI and display new budget
+    UICtrl.clearDisplay(btnType);
+
+    //update budget and item percentages
+    updateBudget();
+    updateItemPercentages();
   };
 
   var ctrlDeleteItem = function (e) {
