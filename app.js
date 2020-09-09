@@ -140,14 +140,26 @@ var budgetController = (function () {
       };
     },
 
-    recordPreviousItms: function () {
-      data.allItems.prevIncs = data.allItems.inc;
-      data.allItems.prevExps = data.allItems.exp;
+    recordPreviousItms: function (previousButton) {
+      if (previousButton === 'inc') {
+        data.allItems.prevIncs = data.allItems.inc;
+      } else if (previousButton === 'exp') {
+        data.allItems.prevExps = data.allItems.exp;
+      } else if (previousButton === 'all') {
+        data.allItems.prevIncs = data.allItems.inc;
+        data.allItems.prevExps = data.allItems.exp;
+      };
     },
 
-    restoreItms: function () {
-      data.allItems.inc = data.allItems.prevIncs;
-      data.allItems.exp = data.allItems.prevExps;
+    restoreItms: function (previousButton) {
+      if (previousButton === 'inc') {
+        data.allItems.inc = data.allItems.prevIncs;
+      } else if (previousButton === 'exp') {
+        data.allItems.exp = data.allItems.prevExps;
+      } else if (previousButton === 'all') {
+        data.allItems.inc = data.allItems.prevIncs;
+        data.allItems.exp = data.allItems.prevExps;
+      };
     },
 
     testing: function () {
@@ -178,7 +190,10 @@ var UIController = (function () {
     container: document.querySelector('.container'),
     dateElement: document.querySelector('.budget__title--month'),
     addContainer: document.querySelector('.add__container'),
-    undo: document.querySelector('.undo')
+    clearIncBtn: document.querySelector('.clear_inc'),
+    clearExpBtn: document.querySelector('.clear_exp'),
+    clearAllBtn: document.querySelector('.clear_all'),
+    undoBtn: document.querySelector('.undo')
   };
 
   DOMStrings = {
@@ -373,6 +388,27 @@ var UIController = (function () {
         removeIncs();
         removeExps();
       };
+    },
+
+    undoClearing: function (items, type) {
+      var dataItems = items;
+      if (type === 'inc') {
+        nodeListForEach(dataItems.inc, function (cur, index) {
+          addIncItem(dataItems.inc[index]);
+        });
+      } else if (type === 'exp') {
+        nodeListForEach(dataItems.exp, function (cur, index) {
+          addExpItem(dataItems.exp[index]);
+          console.log(type);
+        });
+      } else if (type === 'all') {
+        nodeListForEach(dataItems.inc, function (cur, index) {
+          addIncItem(dataItems.inc[index]);
+        });
+        nodeListForEach(dataItems.exp, function (cur, index) {
+          addExpItem(dataItems.exp[index]);
+        });
+      };
     }
   };
 })();
@@ -393,58 +429,69 @@ var controller = (function (budgetCtrl, UICtrl) {
 
     DOMobj.container.addEventListener('click', ctrlDeleteItem);
     DOMobj.addType.addEventListener('change', UICtrl.changedType);
-    DOMobj.addContainer.addEventListener('click', ctrlClearItems);
-    DOMobj.undo.addEventListener('click', ctrlUndo);
+    DOMobj.undoBtn.addEventListener('click', ctrlUndo);
+    DOMobj.clearIncBtn.addEventListener('click', ctrlClearIncs);
+    DOMobj.clearExpBtn.addEventListener('click', ctrlClearExps);
+    DOMobj.clearAllBtn.addEventListener('click', ctrlClearAll);
   }
+
+  var previousClearType;
 
   var ctrlUndo = function () {
-    //push previous original items back into the data structure and update budget and percentages
-    budgetCtrl.restoreItms();
-    budgetCtrl.calculateBudget();
-    budgetCtrl.updateItemPercentages();
+    if (previousClearType !== -1) {
+      // push previous original items back into the data structure
+      budgetCtrl.restoreItms(previousClearType);
 
-    //update the UI back to the original by displaying the reseted data structure into the 
+      // update the UI back to the original by displaying the reseted data structure into the UI
+      var dataItems = budgetCtrl.getItems();
+      UICtrl.undoClearing(dataItems, previousClearType);
+      updateBudget();
+      updateItemPercentages();
 
-
+      previousClearType = -1;
+    }
   }
 
+  var ctrlClearIncs = function () {
+    // Record previous data structure and clear new data structure
+    budgetCtrl.recordPreviousItms('inc');
+    budgetCtrl.clearAll('inc');
+    previousClearType = 'inc';
 
-  var ctrlClearItems = function (e) {
-    var clickedBtn, btnType;
+    // clear incs from UI
+    UICtrl.clearDisplay('inc');
 
-    //identify button clicked
-    var clickedBtn = e.target.classList.value;
-
-    switch (clickedBtn) {
-      case 'clear_exp': {
-        btnType = 'exp';
-        break;
-      }
-      case 'clear_inc': {
-        btnType = 'inc';
-        break;
-      }
-      case 'clear_all': {
-        btnType = 'all';
-        break;
-      }
-      default: {
-        btnType = -1;
-      }
-    };
-
-    //clear from data structure and record previous items in data structure
-    budgetCtrl.recordPreviousItms();
-
-    budgetCtrl.clearAll(btnType);
-
-    //clear from UI and display new budget
-    UICtrl.clearDisplay(btnType);
-
-    //update budget and item percentages
+    // update budget and item percentages
     updateBudget();
     updateItemPercentages();
   };
+
+  var ctrlClearExps = function () {
+    // Record previous data structure and clear new data structure
+    budgetCtrl.recordPreviousItms('exp');
+    budgetCtrl.clearAll('exp');
+    previousClearType = 'exp';
+
+    // clear exps from UI
+    UICtrl.clearDisplay('exp');
+
+    // update budget and item percentages
+    updateBudget();
+    updateItemPercentages();
+  };
+
+  var ctrlClearAll = function () {
+    budgetCtrl.recordPreviousItms('all');
+    budgetCtrl.clearAll('all');
+    previousClearType = 'all';
+
+    //clear all from UI
+    UICtrl.clearDisplay('all');
+
+    // update budget and item percentages
+    updateBudget();
+    updateItemPercentages();
+  }
 
   var ctrlDeleteItem = function (e) {
     var itemID, splitID, type, ID;
@@ -510,6 +557,7 @@ var controller = (function (budgetCtrl, UICtrl) {
 
       // 6. Update individual exp percentages
       updateItemPercentages();
+
     } else {
       alert('WARNING! You must enter a real number that\'s not 0, and you must enter a description. If you fail you will be terminated');
     }
