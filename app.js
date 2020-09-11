@@ -246,7 +246,7 @@ var UIController = (function () {
     if (int.length > 3 && int.length < 7) {
       int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3);
     } else if (int.length >= 7) {
-      int = int.substr(0, int.length - 6) + ',' + int.substr(int.length - 6, 3) + ',' + int.substr(3, 3);
+      int = int.substr(0, int.length - 6) + ',' + int.substr(int.length - 6, 3) + ',' + int.substr(int.length - 3, 3);
     }
 
     return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
@@ -256,6 +256,22 @@ var UIController = (function () {
     for (var i = 0; i < list.length; i++) {
       callback(list[i], i);
     };
+  };
+
+  var removeIncs = function () {
+    var incElms = document.querySelectorAll('.incitm');
+
+    nodeListForEach(incElms, function (cur, index) {
+      cur.parentNode.removeChild(document.getElementById('inc-' + index));
+    });
+  };
+
+  var removeExps = function () {
+    var expElms = document.querySelectorAll('.expitm');
+
+    nodeListForEach(expElms, function (cur, index) {
+      cur.parentNode.removeChild(document.getElementById('exp-' + index))
+    });
   };
 
   return {
@@ -364,22 +380,6 @@ var UIController = (function () {
     },
 
     clearDisplay: function (type) {
-      var incElms, expElms, removeIncs, removeExps;
-      incElms = document.querySelectorAll('.incitm');
-      expElms = document.querySelectorAll('.expitm');
-
-      removeIncs = function () {
-        nodeListForEach(incElms, function (cur, index) {
-          cur.parentNode.removeChild(document.getElementById('inc-' + index));
-        });
-      };
-
-      removeExps = function () {
-        nodeListForEach(expElms, function (cur, index) {
-          cur.parentNode.removeChild(document.getElementById('exp-' + index))
-        });
-      }
-
       if (type === 'inc') {
         removeIncs();
       } else if (type === 'exp') {
